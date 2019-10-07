@@ -1,6 +1,5 @@
 package com.tealium.remotecommands.usabilla
 
-//import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
@@ -13,6 +12,7 @@ import com.usabilla.sdk.ubform.net.http.UsabillaHttpClient
 import com.tealium.remotecommands.usabilla.UsabillaConstants.TAG
 import com.tealium.remotecommands.usabilla.UsabillaConstants.Commands
 import com.tealium.remotecommands.usabilla.UsabillaConstants.Keys
+import org.json.JSONObject
 import java.util.*
 
 /**
@@ -65,12 +65,20 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
     @Throws(Exception::class)
     public override fun onInvoke(response: RemoteCommand.Response) {
         val payload = response.requestPayload
+        val commandList = splitCommands(payload)
+        parseCommands(commandList, payload)
+        response.send()
+    }
 
-        val commandList = splitCommands(
-            payload.optString(Keys.COMMAND_NAME, "")
-        )
+    internal fun splitCommands(payload: JSONObject): Array<String> {
+        val commandString = payload.optString(Keys.COMMAND_NAME, "")
+        return commandString.split(UsabillaConstants.SEPARATOR).map {
+            it.trim().toLowerCase(Locale.ROOT)
+        }.toTypedArray()
+    }
 
-        commandList.forEach { command ->
+    internal fun parseCommands(commands: Array<String>, payload: JSONObject) {
+        commands.forEach { command ->
             try {
                 when (command) {
                     Commands.INITIALIZE -> {
@@ -127,13 +135,6 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
             } catch (ex: Exception) {
                 Log.w(TAG, "Error processing command: $command", ex)
             }
-        }
-        response.send()
-    }
-
-    private fun splitCommands(commandListString: String): List<String> {
-        return commandListString.split(UsabillaConstants.SEPARATOR).map {
-            it.trim().toLowerCase(Locale.ROOT)
         }
     }
 
