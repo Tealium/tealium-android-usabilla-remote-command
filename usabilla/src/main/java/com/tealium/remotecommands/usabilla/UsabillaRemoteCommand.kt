@@ -203,6 +203,6 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
 
     companion object {
         const val DEFAULT_COMMAND_ID = "usabilla"
-        const val DEFAULT_COMMAND_DESC = "usabilla remote command"
+        const val DEFAULT_COMMAND_DESC = "Tealium-Usabilla Remote Command"
     }
 }
