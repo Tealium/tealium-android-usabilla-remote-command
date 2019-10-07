@@ -27,10 +27,8 @@ object UsabillaConstants {
         const val APP_ID = "appId"
         const val EVENT_NAME = "event"
         const val DEBUG_ENABLED = "debugEnabled"
-        //const val DISPLAY_CAMPAIGNS = "canDisplayCampaigns"
         const val FORM_ID = "formId"
-        const val FORM_IDS = "formIds";
-        //const val DISMISS_AUTOMATICALLY = "dismissAutomatically"
+        const val FORM_IDS = "formIds"
         const val CUSTOM = "custom"
         const val FRAGMENT_ID = "fragmentId"
 
