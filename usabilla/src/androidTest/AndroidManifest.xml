@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.tealium.remotecommands.usabilla" >
+
+    <application>
+        <activity android:name=".QAFragmentActivity"
+            android:theme="@style/Theme.AppCompat"></activity>
+        <activity android:name=".QANonFragmentActivity"></activity>
+    </application>
+
+</manifest>
