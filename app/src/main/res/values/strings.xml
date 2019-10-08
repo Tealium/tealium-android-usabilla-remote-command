@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">TealiumUsabilla</string>
+
+    <!-- Main Activity -->
+    <string name="btn_launch_events_activity">Launch Events Activity</string>
+    <string name="btn_launch_passive_feedback_activity">Launch Passive Feedback Activity</string>
+    <string name="btn_launch_campaign_feedback_activity">Launch Campaign Feedback Activity</string>
+
+    <!-- Events Activity -->
+    <string name="btn_initialize">Initialize Event</string>
+    <string name="btn_custom_event">Custom Event</string>
+    <string name="btn_custom_variable">Set Custom Variables</string>
+
+    <string name="hint_app_id">AppId</string>
+    <string name="hint_event_name">Event Name</string>
+    <string name="hint_variable_name">Custom Variable Name</string>
+    <string name="hint_variable_value">Custom Variable Value</string>
+
+    <!-- Passive Feedback Activity -->
+    <string name="btn_preload_forms">Preload Feedback Forms</string>
+    <string name="btn_load_form">Load Passive Feedback Form</string>
+    <string name="btn_dismiss_form">Dismiss Form</string>
+
+    <string name="hint_preload_forms">FormId1,FormId2</string>
+    <string name="hint_form_id">FormId</string>
+
+    <!-- Campaign Feedback Activity -->
+    <string name="btn_campaign_event">Campaign Event</string>
+    <string name="btn_reset_campaign">Reset Campaign Data</string>
+
+    <string name="hint_campaign_event_name">Campaign Event Name</string>
+    <string name="tv_campaign_explanation">Campaigns are triggered by events; set your event name below and trigger the event using the button. If you need to show the same campaign more than once then you will need to reset the campaign.</string>
+
+</resources>
