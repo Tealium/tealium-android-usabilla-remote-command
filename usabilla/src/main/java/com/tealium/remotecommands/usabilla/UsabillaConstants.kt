@@ -1,4 +1,4 @@
-package com.tealium.remotecommands.usabilla
+@file:JvmName("UsabillaConstants")
 
 object UsabillaConstants {
 

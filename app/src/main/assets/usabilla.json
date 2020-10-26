@@ -1,0 +1,23 @@
+{
+  "config": {
+    "appId": "test app id",
+    "debugEnabled": true
+  },
+  "mappings": {
+    "event_name": "event",
+    "display_campaigns": "canDisplayCampaigns",
+    "dismiss_automatically": "dismissAutomatically",
+    "form_id": "formId",
+    "form_ids": "formIds",
+    "customer_first_name": "custom.customer_first_name"
+  },
+  "commands": {
+    "launch": "initialize",
+    "display_campaigns": "candisplaycampaigns",
+    "dismiss": "dismissautomatically",
+    "button_click": "sendevent",
+    "load_form": "loadfeedbackform",
+    "set_variables": "setcustomvariable",
+    "reset": "resetcampaigndata"
+  }
+}

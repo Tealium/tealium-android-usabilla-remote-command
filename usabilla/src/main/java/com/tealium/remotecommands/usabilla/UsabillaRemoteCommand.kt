@@ -1,17 +1,15 @@
 package com.tealium.remotecommands.usabilla
 
+import android.app.Application
 import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
-import com.tealium.internal.tagbridge.RemoteCommand
-import com.tealium.library.Tealium
+import com.tealium.remotecommands.RemoteCommand
+import com.tealium.remotecommands.RemoteCommandContext
 import com.usabilla.sdk.ubform.UsabillaFormCallback
 import com.usabilla.sdk.ubform.UsabillaReadyCallback
 import com.usabilla.sdk.ubform.net.http.UsabillaHttpClient
 
-import com.tealium.remotecommands.usabilla.UsabillaConstants.TAG
-import com.tealium.remotecommands.usabilla.UsabillaConstants.Commands
-import com.tealium.remotecommands.usabilla.UsabillaConstants.Keys
 import org.json.JSONObject
 import java.util.*
 
@@ -29,10 +27,9 @@ import java.util.*
  * dismissed.
  */
 class UsabillaRemoteCommand @JvmOverloads constructor(
-    instanceName: String,
-    private val config: Tealium.Config,
-    usabillaHttpClient: UsabillaHttpClient? = null,
-    usabillaReadyCallback: UsabillaReadyCallback? = null,
+    private val application: Application,
+    private val usabillaHttpClient: UsabillaHttpClient? = null,
+    private val usabillaReadyCallback: UsabillaReadyCallback? = null,
     autoFragmentManager: Boolean = true,
     autoFeedbackHandler: Boolean = true,
     commandId: String = DEFAULT_COMMAND_ID,
@@ -40,9 +37,8 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
 ) : RemoteCommand(commandId, description), UsabillaReadyCallback {
 
     private var _usabillaFormCallback: UsabillaFormCallback? = null
-    internal var usabillaTrackable: UsabillaTrackable = UsabillaTracker(
-        instanceName,
-        config.application.applicationContext,
+    internal var usabillaInstance: UsabillaCommand = UsabillaInstance(
+        application,
         usabillaHttpClient,
         usabillaReadyCallback
     )
@@ -71,7 +67,7 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
     }
 
     internal fun splitCommands(payload: JSONObject): Array<String> {
-        val commandString = payload.optString(Keys.COMMAND_NAME, "")
+        val commandString = payload.optString(UsabillaConstants.Keys.COMMAND_NAME, "")
         return commandString.split(UsabillaConstants.SEPARATOR).map {
             it.trim().toLowerCase(Locale.ROOT)
         }.toTypedArray()
@@ -81,59 +77,59 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
         commands.forEach { command ->
             try {
                 when (command) {
-                    Commands.INITIALIZE -> {
-                        usabillaTrackable.initialize(
-                            payload.optString(Keys.APP_ID, null)
+                    UsabillaConstants.Commands.INITIALIZE -> {
+                        usabillaInstance.initialize(
+                            payload.optString(UsabillaConstants.Keys.APP_ID, null)
                         )
                     }
-                    Commands.DEBUG_ENABLED ->
+                    UsabillaConstants.Commands.DEBUG_ENABLED ->
                         // default to false
-                        usabillaTrackable.setDebugEnabled(
+                        usabillaInstance.setDebugEnabled(
                             payload.optBoolean(
-                                Keys.DEBUG_ENABLED,
+                                UsabillaConstants.Keys.DEBUG_ENABLED,
                                 false
                             )
                         )
-                    Commands.DISPLAY_CAMPAIGN -> {
+                    UsabillaConstants.Commands.DISPLAY_CAMPAIGN -> {
                         // not relevant to Android.
                     }
-                    Commands.DISMISS_AUTOMATICALLY -> {
-                        usabillaTrackable.dismiss()
+                    UsabillaConstants.Commands.DISMISS_AUTOMATICALLY -> {
+                        usabillaInstance.dismiss()
                     }
-                    Commands.LOAD_FEEDBACK_FORM -> {
-                        val formId = payload.optString(Keys.FORM_ID, null)
+                    UsabillaConstants.Commands.LOAD_FEEDBACK_FORM -> {
+                        val formId = payload.optString(UsabillaConstants.Keys.FORM_ID, null)
                         formId?.let {
-                            usabillaTrackable.loadFeedbackForm(
+                            usabillaInstance.loadFeedbackForm(
                                 it,
                                 _usabillaFormCallback,
-                                payload.optInt(Keys.FRAGMENT_ID, -1)
+                                payload.optInt(UsabillaConstants.Keys.FRAGMENT_ID, -1)
                             )
                         }
                     }
-                    Commands.PRELOAD_FEEDBACK_FORMS -> {
-                        val formIds = payload.optJSONArray(Keys.FORM_ID)
+                    UsabillaConstants.Commands.PRELOAD_FEEDBACK_FORMS -> {
+                        val formIds = payload.optJSONArray(UsabillaConstants.Keys.FORM_ID)
                         formIds?.let {
-                            usabillaTrackable.preloadFeedbackForms(it)
+                            usabillaInstance.preloadFeedbackForms(it)
                         }
                     }
-                    Commands.REMOVE_CACHED_FORMS -> {
-                        usabillaTrackable.removeCachedForms()
+                    UsabillaConstants.Commands.REMOVE_CACHED_FORMS -> {
+                        usabillaInstance.removeCachedForms()
                     }
-                    Commands.RESET -> {
-                        usabillaTrackable.reset()
+                    UsabillaConstants.Commands.RESET -> {
+                        usabillaInstance.reset()
                     }
-                    Commands.SEND_EVENT -> {
-                        usabillaTrackable.sendEvent(payload.optString(Keys.EVENT_NAME, null))
+                    UsabillaConstants.Commands.SEND_EVENT -> {
+                        usabillaInstance.sendEvent(payload.optString(UsabillaConstants.Keys.EVENT_NAME, null))
                     }
-                    Commands.SET_CUSTOM_VARIABLES -> {
-                        val customVars = payload.optJSONObject(Keys.CUSTOM)
+                    UsabillaConstants.Commands.SET_CUSTOM_VARIABLES -> {
+                        val customVars = payload.optJSONObject(UsabillaConstants.Keys.CUSTOM)
                         customVars?.let {
-                            usabillaTrackable.setCustomVariables(it)
+                            usabillaInstance.setCustomVariables(it)
                         }
                     }
                 }
             } catch (ex: Exception) {
-                Log.w(TAG, "Error processing command: $command", ex)
+                Log.w(UsabillaConstants.TAG, "Error processing command: $command", ex)
             }
         }
     }
@@ -153,7 +149,7 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
      * then you can re-register them here.
      */
     fun registerLifecycleCallbacks() {
-        config.application.registerActivityLifecycleCallbacks(usabillaTrackable)
+        application.registerActivityLifecycleCallbacks(usabillaInstance)
     }
 
     /**
@@ -162,7 +158,7 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
      * [.registerLifecycleCallbacks]
      */
     fun unregisterLifecycleCallbacks() {
-        config.application.unregisterActivityLifecycleCallbacks(usabillaTrackable)
+        application.unregisterActivityLifecycleCallbacks(usabillaInstance)
     }
 
     /**
@@ -171,13 +167,13 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
      * then you can re-register them using this method.
      */
     fun registerBroadcastReceivers() {
-        LocalBroadcastManager.getInstance(config.application.applicationContext).registerReceiver(
-            usabillaTrackable.passiveFeedbackReceiver,
-            UsabillaTrackable.CLOSER_FILTER_PASSIVE
+        LocalBroadcastManager.getInstance(application.applicationContext).registerReceiver(
+            usabillaInstance.passiveFeedbackReceiver,
+            UsabillaCommand.CLOSER_FILTER_PASSIVE
         )
-        LocalBroadcastManager.getInstance(config.application.applicationContext).registerReceiver(
-            usabillaTrackable.campaignFeedbackReceiver,
-            UsabillaTrackable.CLOSER_FILTER_CAMPAIGN
+        LocalBroadcastManager.getInstance(application.applicationContext).registerReceiver(
+            usabillaInstance.campaignFeedbackReceiver,
+            UsabillaCommand.CLOSER_FILTER_CAMPAIGN
         )
     }
 
@@ -187,10 +183,16 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
      * [.registerBroadcastReceivers]
      */
     fun unregisterBroadcastReceivers() {
-        LocalBroadcastManager.getInstance(config.application.applicationContext)
-            .unregisterReceiver(usabillaTrackable.passiveFeedbackReceiver)
-        LocalBroadcastManager.getInstance(config.application.applicationContext)
-            .unregisterReceiver(usabillaTrackable.campaignFeedbackReceiver)
+        LocalBroadcastManager.getInstance(application.applicationContext)
+            .unregisterReceiver(usabillaInstance.passiveFeedbackReceiver)
+        LocalBroadcastManager.getInstance(application.applicationContext)
+            .unregisterReceiver(usabillaInstance.campaignFeedbackReceiver)
+    }
+
+    override fun setContext(context: RemoteCommandContext?) {
+        context?.let {
+            usabillaInstance.setCommandContext(it)
+        }
     }
 
     /**
@@ -198,7 +200,7 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
      * then be sure to call this method after creating the RemoteCommand.
      */
     override fun onUsabillaInitialized() {
-        usabillaTrackable.onUsabillaInitialized()
+        usabillaInstance.onUsabillaInitialized()
     }
 
     companion object {

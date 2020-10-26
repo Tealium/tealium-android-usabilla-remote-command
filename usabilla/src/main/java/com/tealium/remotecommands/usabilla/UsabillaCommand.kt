@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.IntentFilter
 import androidx.fragment.app.FragmentManager
+import com.tealium.remotecommands.RemoteCommandContext
 
 import com.usabilla.sdk.ubform.UbConstants
 
@@ -12,7 +13,7 @@ import com.usabilla.sdk.ubform.UsabillaReadyCallback
 import org.json.JSONArray
 import org.json.JSONObject
 
-internal interface UsabillaTrackable : Application.ActivityLifecycleCallbacks, UsabillaReadyCallback {
+internal interface UsabillaCommand : Application.ActivityLifecycleCallbacks, UsabillaReadyCallback {
 
     // API Methods
     fun initialize(appId: String?)
@@ -36,4 +37,5 @@ internal interface UsabillaTrackable : Application.ActivityLifecycleCallbacks, U
         val CLOSER_FILTER_CAMPAIGN = IntentFilter(UbConstants.INTENT_CLOSE_CAMPAIGN)
     }
 
+    fun setCommandContext(remoteCommandContext: RemoteCommandContext)
 }
