@@ -109,7 +109,7 @@ internal class UsabillaInstance(
 
                 val result =
                     intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT)
-                trackFeedbackResult(UsabillaConstants.Events.USABILLA_FORM_CLOSED, result)
+                trackFeedbackResult(Events.USABILLA_FORM_CLOSED, result)
             }
         }
     }
@@ -119,7 +119,7 @@ internal class UsabillaInstance(
             override fun onReceive(context: Context, intent: Intent) {
                 val result =
                     intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT_CAMPAIGN)
-                trackFeedbackResult(UsabillaConstants.Events.USABILLA_FORM_CLOSED, result)
+                trackFeedbackResult(Events.USABILLA_FORM_CLOSED, result)
             }
         }
     }
@@ -167,11 +167,11 @@ internal class UsabillaInstance(
 
             override fun formLoadSuccess(formClient: FormClient) {
                 addPassiveFeedbackFragment(formClient.fragment, fragmentId)
-                track(UsabillaConstants.Events.USABILLA_FORM_LOADED, null)
+                track(Events.USABILLA_FORM_LOADED, null)
             }
 
             override fun formLoadFail() {
-                track(UsabillaConstants.Events.USABILLA_FORM_LOAD_ERROR, null)
+                track(Events.USABILLA_FORM_LOAD_ERROR, null)
             }
 
             override fun mainButtonTextUpdated(s: String) {
@@ -190,9 +190,9 @@ internal class UsabillaInstance(
      */
     private fun trackFeedbackResult(eventName: String, feedback: FeedbackResult) {
         val data = HashMap<String, Any>()
-        data[UsabillaConstants.Keys.USABILLA_ABANDONED_PAGE_INDEX] = feedback.abandonedPageIndex
-        data[UsabillaConstants.Keys.USABILLA_RATING] = feedback.rating
-        data[UsabillaConstants.Keys.USABILLA_SENT] = feedback.isSent
+        data[Keys.USABILLA_ABANDONED_PAGE_INDEX] = feedback.abandonedPageIndex
+        data[Keys.USABILLA_RATING] = feedback.rating
+        data[Keys.USABILLA_SENT] = feedback.isSent
 
         track(eventName, data)
     }

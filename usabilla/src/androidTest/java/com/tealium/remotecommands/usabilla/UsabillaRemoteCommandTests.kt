@@ -93,7 +93,7 @@ class AndroidUsabillaRemoteCommandTests {
         usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.INITIALIZE)
+        payload.put(Keys.COMMAND_NAME, Commands.INITIALIZE)
 
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
@@ -112,15 +112,15 @@ class AndroidUsabillaRemoteCommandTests {
 
         val payload = JSONObject()
         // No Keys.DEBUG_ENABLED supplied - should default to false
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.DEBUG_ENABLED)
+        payload.put(Keys.COMMAND_NAME, Commands.DEBUG_ENABLED)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         // With Keys.DEBUG_ENABLED supplied as true
-        payload.put(UsabillaConstants.Keys.DEBUG_ENABLED, true)
+        payload.put(Keys.DEBUG_ENABLED, true)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         // With Keys.DEBUG_ENABLED supplied as true
-        payload.put(UsabillaConstants.Keys.DEBUG_ENABLED, false)
+        payload.put(Keys.DEBUG_ENABLED, false)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         verifySequence {
@@ -138,8 +138,8 @@ class AndroidUsabillaRemoteCommandTests {
 
         val payload = JSONObject()
         payload.put(
-            UsabillaConstants.Keys.COMMAND_NAME,
-            UsabillaConstants.Commands.LOAD_FEEDBACK_FORM
+            Keys.COMMAND_NAME,
+            Commands.LOAD_FEEDBACK_FORM
         )
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
@@ -150,17 +150,17 @@ class AndroidUsabillaRemoteCommandTests {
 
         // FormId provided, but no custom form callback
         val formId1 = "some_form_id_1"
-        payload.put(UsabillaConstants.Keys.FORM_ID, formId1)
+        payload.put(Keys.FORM_ID, formId1)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         // FormId provided, with a custom callback
         val formId2 = "some_form_id_2"
-        payload.put(UsabillaConstants.Keys.FORM_ID, formId2)
+        payload.put(Keys.FORM_ID, formId2)
         val usabillaFormCallback = mockk<UsabillaFormCallback>()
         usabillaRemoteCommand.setUsabillaFormCallback(usabillaFormCallback)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
-        payload.put(UsabillaConstants.Keys.FRAGMENT_ID, 100)
+        payload.put(Keys.FRAGMENT_ID, 100)
         usabillaRemoteCommand.setUsabillaFormCallback(null)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
@@ -179,8 +179,8 @@ class AndroidUsabillaRemoteCommandTests {
 
         val payload = JSONObject()
         payload.put(
-            UsabillaConstants.Keys.COMMAND_NAME,
-            UsabillaConstants.Commands.PRELOAD_FEEDBACK_FORMS
+            Keys.COMMAND_NAME,
+            Commands.PRELOAD_FEEDBACK_FORMS
         )
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
         verify {
@@ -188,7 +188,7 @@ class AndroidUsabillaRemoteCommandTests {
         }
 
         val formIds = JSONArray(mutableListOf("some_form_id_1"))
-        payload.put(UsabillaConstants.Keys.FORM_ID, formIds)
+        payload.put(Keys.FORM_ID, formIds)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         verify {
@@ -204,8 +204,8 @@ class AndroidUsabillaRemoteCommandTests {
 
         val payload = JSONObject()
         payload.put(
-            UsabillaConstants.Keys.COMMAND_NAME,
-            UsabillaConstants.Commands.REMOVE_CACHED_FORMS
+            Keys.COMMAND_NAME,
+            Commands.REMOVE_CACHED_FORMS
         )
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
@@ -221,7 +221,7 @@ class AndroidUsabillaRemoteCommandTests {
         usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.RESET)
+        payload.put(Keys.COMMAND_NAME, Commands.RESET)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         verify {
@@ -236,11 +236,11 @@ class AndroidUsabillaRemoteCommandTests {
         usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.SEND_EVENT)
+        payload.put(Keys.COMMAND_NAME, Commands.SEND_EVENT)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         val eventName = "my_event"
-        payload.put(UsabillaConstants.Keys.EVENT_NAME, eventName)
+        payload.put(Keys.EVENT_NAME, eventName)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
         verify {
             usabillaInstance.sendEvent(null)
@@ -256,8 +256,8 @@ class AndroidUsabillaRemoteCommandTests {
 
         val payload = JSONObject()
         payload.put(
-            UsabillaConstants.Keys.COMMAND_NAME,
-            UsabillaConstants.Commands.SET_CUSTOM_VARIABLES
+            Keys.COMMAND_NAME,
+            Commands.SET_CUSTOM_VARIABLES
         )
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
         verify {
@@ -269,7 +269,7 @@ class AndroidUsabillaRemoteCommandTests {
         customVariables.put("my_int", 10)
         customVariables.put("my_bool", false)
         customVariables.put("my_double", 100.0)
-        payload.put(UsabillaConstants.Keys.CUSTOM, customVariables)
+        payload.put(Keys.CUSTOM, customVariables)
         usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
         verify {
             usabillaInstance.setCustomVariables(customVariables)
@@ -361,9 +361,9 @@ class AndroidUsabillaRemoteCommandTests {
 
         verify {
             wrapper.addPassiveFeedbackFragment(fragment, R.id.frame_fragment)
-            wrapper["track"](UsabillaConstants.Events.USABILLA_FORM_LOADED, any<Map<String, Any>>())
+            wrapper["track"](Events.USABILLA_FORM_LOADED, any<Map<String, Any>>())
             wrapper["track"](
-                UsabillaConstants.Events.USABILLA_FORM_LOAD_ERROR,
+                Events.USABILLA_FORM_LOAD_ERROR,
                 any<Map<String, Any>>()
             )
         }

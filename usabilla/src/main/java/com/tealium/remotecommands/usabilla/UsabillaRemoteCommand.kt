@@ -67,7 +67,7 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
     }
 
     internal fun splitCommands(payload: JSONObject): Array<String> {
-        val commandString = payload.optString(UsabillaConstants.Keys.COMMAND_NAME, "")
+        val commandString = payload.optString(Keys.COMMAND_NAME, "")
         return commandString.split(UsabillaConstants.SEPARATOR).map {
             it.trim().toLowerCase(Locale.ROOT)
         }.toTypedArray()
@@ -77,52 +77,52 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
         commands.forEach { command ->
             try {
                 when (command) {
-                    UsabillaConstants.Commands.INITIALIZE -> {
+                    Commands.INITIALIZE -> {
                         usabillaInstance.initialize(
-                            payload.optString(UsabillaConstants.Keys.APP_ID, null)
+                            payload.optString(Keys.APP_ID, null)
                         )
                     }
-                    UsabillaConstants.Commands.DEBUG_ENABLED ->
+                    Commands.DEBUG_ENABLED ->
                         // default to false
                         usabillaInstance.setDebugEnabled(
                             payload.optBoolean(
-                                UsabillaConstants.Keys.DEBUG_ENABLED,
+                                Keys.DEBUG_ENABLED,
                                 false
                             )
                         )
-                    UsabillaConstants.Commands.DISPLAY_CAMPAIGN -> {
+                    Commands.DISPLAY_CAMPAIGN -> {
                         // not relevant to Android.
                     }
-                    UsabillaConstants.Commands.DISMISS_AUTOMATICALLY -> {
+                    Commands.DISMISS_AUTOMATICALLY -> {
                         usabillaInstance.dismiss()
                     }
-                    UsabillaConstants.Commands.LOAD_FEEDBACK_FORM -> {
-                        val formId = payload.optString(UsabillaConstants.Keys.FORM_ID, null)
+                    Commands.LOAD_FEEDBACK_FORM -> {
+                        val formId = payload.optString(Keys.FORM_ID, null)
                         formId?.let {
                             usabillaInstance.loadFeedbackForm(
                                 it,
                                 _usabillaFormCallback,
-                                payload.optInt(UsabillaConstants.Keys.FRAGMENT_ID, -1)
+                                payload.optInt(Keys.FRAGMENT_ID, -1)
                             )
                         }
                     }
-                    UsabillaConstants.Commands.PRELOAD_FEEDBACK_FORMS -> {
-                        val formIds = payload.optJSONArray(UsabillaConstants.Keys.FORM_ID)
+                    Commands.PRELOAD_FEEDBACK_FORMS -> {
+                        val formIds = payload.optJSONArray(Keys.FORM_ID)
                         formIds?.let {
                             usabillaInstance.preloadFeedbackForms(it)
                         }
                     }
-                    UsabillaConstants.Commands.REMOVE_CACHED_FORMS -> {
+                    Commands.REMOVE_CACHED_FORMS -> {
                         usabillaInstance.removeCachedForms()
                     }
-                    UsabillaConstants.Commands.RESET -> {
+                    Commands.RESET -> {
                         usabillaInstance.reset()
                     }
-                    UsabillaConstants.Commands.SEND_EVENT -> {
-                        usabillaInstance.sendEvent(payload.optString(UsabillaConstants.Keys.EVENT_NAME, null))
+                    Commands.SEND_EVENT -> {
+                        usabillaInstance.sendEvent(payload.optString(Keys.EVENT_NAME, null))
                     }
-                    UsabillaConstants.Commands.SET_CUSTOM_VARIABLES -> {
-                        val customVars = payload.optJSONObject(UsabillaConstants.Keys.CUSTOM)
+                    Commands.SET_CUSTOM_VARIABLES -> {
+                        val customVars = payload.optJSONObject(Keys.CUSTOM)
                         customVars?.let {
                             usabillaInstance.setCustomVariables(it)
                         }
