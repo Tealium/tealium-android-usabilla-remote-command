@@ -6,10 +6,10 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.1"
+    buildToolsVersion "29.0.3"
     defaultConfig {
         applicationId "com.tealium.example"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -25,11 +25,14 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(path: ':usabilla')
-    implementation 'com.tealium:library:5.5.5'
-    implementation 'com.tealium:lifecycle:1.1.1'
 
-    implementation 'com.usabilla.sdk:ubform:6.4.0'
+    implementation "com.tealium:kotlin-remotecommand-dispatcher:1.0.0"
+    implementation "com.tealium:kotlin-tagmanagement-dispatcher:1.0.0"
+    implementation "com.tealium:kotlin-lifecycle:1.0.0"
+    releaseImplementation "com.tealium.remotecommands:appsflyer:$tealium_usabilla_version"
+    debugImplementation project (path: ':usabilla')
+
+    implementation 'com.usabilla.sdk:ubform:7.0.7'
 
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.0.2'

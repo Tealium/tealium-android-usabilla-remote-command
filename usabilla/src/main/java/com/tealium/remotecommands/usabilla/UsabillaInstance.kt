@@ -8,9 +8,7 @@ import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import com.tealium.library.Tealium
-import com.tealium.remotecommands.usabilla.UsabillaConstants.Events
-import com.tealium.remotecommands.usabilla.UsabillaConstants.Keys
+import com.tealium.remotecommands.RemoteCommandContext
 
 import com.usabilla.sdk.ubform.Usabilla
 import com.usabilla.sdk.ubform.UsabillaFormCallback
@@ -24,10 +22,12 @@ import org.json.JSONObject
 import java.util.HashMap
 import java.util.LinkedList
 
-internal class UsabillaTracker(private val instanceName: String,
-                               private val applicationContext: Context,
-                               private val usabillaHttpClient: UsabillaHttpClient? = null,
-                               private val usabillaReadyCallback: UsabillaReadyCallback? = null) : UsabillaTrackable {
+internal class UsabillaInstance(
+    private val applicationContext: Context,
+    private val usabillaHttpClient: UsabillaHttpClient? = null,
+    private val usabillaReadyCallback: UsabillaReadyCallback? = null,
+    private var remoteCommandContext: RemoteCommandContext? = null
+) : UsabillaCommand {
 
     private var currentActivity: Activity? = null
     private var usabillaInitialized = false
@@ -67,8 +67,17 @@ internal class UsabillaTracker(private val instanceName: String,
         }
     }
 
-    override fun loadFeedbackForm(formId: String, usabillaFormCallback: UsabillaFormCallback?, fragmentId: Int) {
-        Usabilla.loadFeedbackForm(formId, null, null, usabillaFormCallback ?: getDefaultFormCallback(fragmentId))
+    override fun loadFeedbackForm(
+        formId: String,
+        usabillaFormCallback: UsabillaFormCallback?,
+        fragmentId: Int
+    ) {
+        Usabilla.loadFeedbackForm(
+            formId,
+            null,
+            null,
+            usabillaFormCallback ?: getDefaultFormCallback(fragmentId)
+        )
     }
 
     override fun preloadFeedbackForms(formIds: JSONArray?) {
@@ -98,7 +107,8 @@ internal class UsabillaTracker(private val instanceName: String,
                 // Remove the Fragment
                 removePassiveFeedbackFragment()
 
-                val result = intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT)
+                val result =
+                    intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT)
                 trackFeedbackResult(Events.USABILLA_FORM_CLOSED, result)
             }
         }
@@ -107,7 +117,8 @@ internal class UsabillaTracker(private val instanceName: String,
     override val campaignFeedbackReceiver: BroadcastReceiver by lazy {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                val result = intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT_CAMPAIGN)
+                val result =
+                    intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT_CAMPAIGN)
                 trackFeedbackResult(Events.USABILLA_FORM_CLOSED, result)
             }
         }
@@ -123,8 +134,8 @@ internal class UsabillaTracker(private val instanceName: String,
         fragment?.let { frag ->
             fragmentManager?.apply {
                 this.beginTransaction()
-                        .replace(fragmentId, frag, UsabillaConstants.FRAGMENT_TAG_NAME)
-                        .commit()
+                    .replace(fragmentId, frag, UsabillaConstants.FRAGMENT_TAG_NAME)
+                    .commit()
             }
 
         }
@@ -138,8 +149,8 @@ internal class UsabillaTracker(private val instanceName: String,
         fragmentManager?.apply {
             this.findFragmentByTag(UsabillaConstants.FRAGMENT_TAG_NAME)?.let {
                 this.beginTransaction()
-                        .remove(it)
-                        .commit()
+                    .remove(it)
+                    .commit()
             }
         }
     }
@@ -192,8 +203,11 @@ internal class UsabillaTracker(private val instanceName: String,
      * @param data
      */
     private fun track(eventName: String, data: Map<String, Any>?) {
-        val instance = Tealium.getInstance(instanceName)
-        instance?.trackEvent(eventName, data)
+        remoteCommandContext?.track(eventName, data)
+    }
+
+    fun setContext(context: RemoteCommandContext) {
+        remoteCommandContext = context
     }
 
     override fun onUsabillaInitialized() {
@@ -203,6 +217,10 @@ internal class UsabillaTracker(private val instanceName: String,
         }
 
         usabillaReadyCallback?.onUsabillaInitialized()
+    }
+
+    override fun setCommandContext(remoteCommandContext: RemoteCommandContext) {
+        this.remoteCommandContext = remoteCommandContext
     }
 
     override fun onActivityCreated(activity: Activity, bundle: Bundle?) {

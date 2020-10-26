@@ -10,8 +10,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.filters.FlakyTest
 import androidx.test.runner.AndroidJUnit4
 import androidx.test.rule.ActivityTestRule
-import com.tealium.internal.tagbridge.RemoteCommand
-import com.tealium.library.Tealium
+import com.tealium.remotecommands.RemoteCommand
+import com.tealium.remotecommands.RemoteCommandContext
 import com.usabilla.sdk.ubform.UbConstants
 import com.usabilla.sdk.ubform.UsabillaFormCallback
 import com.usabilla.sdk.ubform.UsabillaReadyCallback
@@ -24,20 +24,14 @@ import org.junit.*
 import org.junit.runner.RunWith
 import java.lang.Exception
 
-
 @RunWith(AndroidJUnit4::class)
 class AndroidUsabillaRemoteCommandTests {
 
-    private val instanceName = "test-instance"
-    private val accountName = "tealiummobile"
-    private val profileName = "mobile"
-    private val environmentName = "dev"
     private val passiveIntent: Intent = Intent(UbConstants.INTENT_CLOSE_FORM)
     private val campaignIntent: Intent = Intent(UbConstants.INTENT_CLOSE_CAMPAIGN)
 
-    private lateinit var config: Tealium.Config
     private lateinit var usabillaRemoteCommand: UsabillaRemoteCommand
-    private lateinit var usabillaTracker: UsabillaTracker
+    private lateinit var usabillaInstance: UsabillaInstance
 
     @Rule
     @JvmField
@@ -45,15 +39,16 @@ class AndroidUsabillaRemoteCommandTests {
 
     @Before
     fun setUp() {
-
-        config = Tealium.Config.create(qaActivity.activity.application, accountName, profileName, environmentName)
-        usabillaRemoteCommand = spyk(UsabillaRemoteCommand(instanceName,
-                config,
+        usabillaRemoteCommand = spyk(
+            UsabillaRemoteCommand(
+                qaActivity.activity.application,
                 usabillaHttpClient = null,
                 usabillaReadyCallback = null,
                 autoFragmentManager = false,
-                autoFeedbackHandler = false), recordPrivateCalls = true) // no call back supplied.
-        usabillaTracker = mockk(relaxed = true)
+                autoFeedbackHandler = false
+            ), recordPrivateCalls = true
+        ) // no call back supplied.
+        usabillaInstance = mockk(relaxed = true)
     }
 
     @Test
@@ -70,12 +65,15 @@ class AndroidUsabillaRemoteCommandTests {
         val callback = mockk<UsabillaReadyCallback>()
         every { callback.onUsabillaInitialized() } returns Unit
 
-        usabillaRemoteCommand = spyk(UsabillaRemoteCommand(instanceName,
-                config,
+        usabillaRemoteCommand = spyk(
+            UsabillaRemoteCommand(
+                qaActivity.activity.application,
                 usabillaHttpClient = null,
                 usabillaReadyCallback = callback,
                 autoFragmentManager = false,
-                autoFeedbackHandler = false)) // with callback
+                autoFeedbackHandler = false
+            )
+        ) // with callback
         verify {
             callback wasNot Called
         }
@@ -92,43 +90,43 @@ class AndroidUsabillaRemoteCommandTests {
     @Test
     fun testOnInvokeRoutingInitialise() {
 
-        usabillaRemoteCommand.usabillaTrackable = usabillaTracker
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.INITIALIZE)
+        payload.put(Keys.COMMAND_NAME, Commands.INITIALIZE)
 
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         verify {
-            usabillaTracker.initialize(any())
+            usabillaInstance.initialize(any())
         }
 
-        confirmVerified(usabillaTracker)
+        confirmVerified(usabillaInstance)
     }
 
     @Throws(JSONException::class)
     @Test
     fun testOnInvokeRoutingSetDebug() {
 
-        usabillaRemoteCommand.usabillaTrackable = usabillaTracker
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
         // No Keys.DEBUG_ENABLED supplied - should default to false
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.DEBUG_ENABLED)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(Keys.COMMAND_NAME, Commands.DEBUG_ENABLED)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         // With Keys.DEBUG_ENABLED supplied as true
-        payload.put(UsabillaConstants.Keys.DEBUG_ENABLED, true)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(Keys.DEBUG_ENABLED, true)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         // With Keys.DEBUG_ENABLED supplied as true
-        payload.put(UsabillaConstants.Keys.DEBUG_ENABLED, false)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(Keys.DEBUG_ENABLED, false)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         verifySequence {
-            usabillaTracker.setDebugEnabled(false)
-            usabillaTracker.setDebugEnabled(true)
-            usabillaTracker.setDebugEnabled(false)
+            usabillaInstance.setDebugEnabled(false)
+            usabillaInstance.setDebugEnabled(true)
+            usabillaInstance.setDebugEnabled(false)
         }
     }
 
@@ -136,37 +134,40 @@ class AndroidUsabillaRemoteCommandTests {
     @Test
     fun testOnInvokeRoutingLoadFeedbackForm() {
 
-        usabillaRemoteCommand.usabillaTrackable = usabillaTracker
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.LOAD_FEEDBACK_FORM)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(
+            Keys.COMMAND_NAME,
+            Commands.LOAD_FEEDBACK_FORM
+        )
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         // No FormId, wrapper shouldn't be called.
         verify {
-            usabillaTracker wasNot Called
+            usabillaInstance wasNot Called
         }
 
         // FormId provided, but no custom form callback
         val formId1 = "some_form_id_1"
-        payload.put(UsabillaConstants.Keys.FORM_ID, formId1)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(Keys.FORM_ID, formId1)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         // FormId provided, with a custom callback
         val formId2 = "some_form_id_2"
-        payload.put(UsabillaConstants.Keys.FORM_ID, formId2)
+        payload.put(Keys.FORM_ID, formId2)
         val usabillaFormCallback = mockk<UsabillaFormCallback>()
         usabillaRemoteCommand.setUsabillaFormCallback(usabillaFormCallback)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
-        payload.put(UsabillaConstants.Keys.FRAGMENT_ID, 100)
+        payload.put(Keys.FRAGMENT_ID, 100)
         usabillaRemoteCommand.setUsabillaFormCallback(null)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         verifyOrder {
-            usabillaTracker.loadFeedbackForm(formId1, null, -1)
-            usabillaTracker.loadFeedbackForm(formId2, usabillaFormCallback, -1)
-            usabillaTracker.loadFeedbackForm(formId2, null, 100)
+            usabillaInstance.loadFeedbackForm(formId1, null, -1)
+            usabillaInstance.loadFeedbackForm(formId2, usabillaFormCallback, -1)
+            usabillaInstance.loadFeedbackForm(formId2, null, 100)
         }
     }
 
@@ -174,21 +175,24 @@ class AndroidUsabillaRemoteCommandTests {
     @Test
     fun testOnInvokeRoutingPreloadFeedbackForm() {
 
-        usabillaRemoteCommand.usabillaTrackable = usabillaTracker
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.PRELOAD_FEEDBACK_FORMS)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(
+            Keys.COMMAND_NAME,
+            Commands.PRELOAD_FEEDBACK_FORMS
+        )
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
         verify {
-            usabillaTracker wasNot Called
+            usabillaInstance wasNot Called
         }
 
         val formIds = JSONArray(mutableListOf("some_form_id_1"))
-        payload.put(UsabillaConstants.Keys.FORM_ID, formIds)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(Keys.FORM_ID, formIds)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         verify {
-            usabillaTracker.preloadFeedbackForms(formIds)
+            usabillaInstance.preloadFeedbackForms(formIds)
         }
     }
 
@@ -196,14 +200,17 @@ class AndroidUsabillaRemoteCommandTests {
     @Test
     fun testOnInvokeRoutingRemoveCachedForms() {
 
-        usabillaRemoteCommand.usabillaTrackable = usabillaTracker
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.REMOVE_CACHED_FORMS)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(
+            Keys.COMMAND_NAME,
+            Commands.REMOVE_CACHED_FORMS
+        )
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         verify {
-            usabillaTracker.removeCachedForms()
+            usabillaInstance.removeCachedForms()
         }
     }
 
@@ -211,14 +218,14 @@ class AndroidUsabillaRemoteCommandTests {
     @Test
     fun testOnInvokeRoutingReset() {
 
-        usabillaRemoteCommand.usabillaTrackable = usabillaTracker
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.RESET)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(Keys.COMMAND_NAME, Commands.RESET)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         verify {
-            usabillaTracker.reset()
+            usabillaInstance.reset()
         }
     }
 
@@ -226,18 +233,18 @@ class AndroidUsabillaRemoteCommandTests {
     @Test
     fun testOnInvokeRoutingSendEvent() {
 
-        usabillaRemoteCommand.usabillaTrackable = usabillaTracker
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.SEND_EVENT)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(Keys.COMMAND_NAME, Commands.SEND_EVENT)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
         val eventName = "my_event"
-        payload.put(UsabillaConstants.Keys.EVENT_NAME, eventName)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(Keys.EVENT_NAME, eventName)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
         verify {
-            usabillaTracker.sendEvent(null)
-            usabillaTracker.sendEvent(eventName)
+            usabillaInstance.sendEvent(null)
+            usabillaInstance.sendEvent(eventName)
         }
     }
 
@@ -245,13 +252,16 @@ class AndroidUsabillaRemoteCommandTests {
     @Test
     fun testOnInvokeRoutingSetCustomVariables() {
 
-        usabillaRemoteCommand.usabillaTrackable = usabillaTracker
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val payload = JSONObject()
-        payload.put(UsabillaConstants.Keys.COMMAND_NAME, UsabillaConstants.Commands.SET_CUSTOM_VARIABLES)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(
+            Keys.COMMAND_NAME,
+            Commands.SET_CUSTOM_VARIABLES
+        )
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
         verify {
-            usabillaTracker wasNot Called
+            usabillaInstance wasNot Called
         }
 
         val customVariables = JSONObject()
@@ -259,25 +269,26 @@ class AndroidUsabillaRemoteCommandTests {
         customVariables.put("my_int", 10)
         customVariables.put("my_bool", false)
         customVariables.put("my_double", 100.0)
-        payload.put(UsabillaConstants.Keys.CUSTOM, customVariables)
-        usabillaRemoteCommand.onInvoke(RemoteCommand.Response("", "", payload))
+        payload.put(Keys.CUSTOM, customVariables)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
         verify {
-            usabillaTracker.setCustomVariables(customVariables)
+            usabillaInstance.setCustomVariables(customVariables)
         }
     }
 
     @Test
     fun testBroadcastReceiverRegistration() {
-        usabillaRemoteCommand.usabillaTrackable = usabillaTracker
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
-        val broadcastManager = LocalBroadcastManager.getInstance(qaActivity.activity.applicationContext)
+        val broadcastManager =
+            LocalBroadcastManager.getInstance(qaActivity.activity.applicationContext)
         usabillaRemoteCommand.unregisterBroadcastReceivers()
         broadcastManager.sendBroadcastSync(passiveIntent)
         broadcastManager.sendBroadcastSync(campaignIntent)
 
         verify {
-            usabillaTracker.passiveFeedbackReceiver wasNot Called
-            usabillaTracker.campaignFeedbackReceiver wasNot Called
+            usabillaInstance.passiveFeedbackReceiver wasNot Called
+            usabillaInstance.campaignFeedbackReceiver wasNot Called
         }
 
         usabillaRemoteCommand.registerBroadcastReceivers()
@@ -285,43 +296,61 @@ class AndroidUsabillaRemoteCommandTests {
         broadcastManager.sendBroadcastSync(campaignIntent)
 
         verify {
-            usabillaTracker.passiveFeedbackReceiver.onReceive(any(), any())
-            usabillaTracker.campaignFeedbackReceiver.onReceive(any(), any())
+            usabillaInstance.passiveFeedbackReceiver.onReceive(any(), any())
+            usabillaInstance.campaignFeedbackReceiver.onReceive(any(), any())
         }
     }
 
     @Test
     fun testLifecycleRegistration() {
         // Lifecycle registration disabled in tests by default.
-        Assert.assertNull((usabillaRemoteCommand.usabillaTrackable as UsabillaTracker).fragmentManager)
+        Assert.assertNull((usabillaRemoteCommand.usabillaInstance as UsabillaInstance).fragmentManager)
         usabillaRemoteCommand.registerLifecycleCallbacks()
 
         // Non Fragment activity launched;
         Espresso.onView(withId(R.id.btn_next_activity)).perform(ViewActions.click())
-        Assert.assertNull((usabillaRemoteCommand.usabillaTrackable as UsabillaTracker).fragmentManager)
+        Assert.assertNull((usabillaRemoteCommand.usabillaInstance as UsabillaInstance).fragmentManager)
 
         // Fragment activity should now be back in focus
         Espresso.pressBack()
-        Assert.assertEquals((usabillaRemoteCommand.usabillaTrackable as UsabillaTracker).fragmentManager, qaActivity.activity.supportFragmentManager)
+        Assert.assertEquals(
+            (usabillaRemoteCommand.usabillaInstance as UsabillaInstance).fragmentManager,
+            qaActivity.activity.supportFragmentManager
+        )
     }
 
     @Test
     @FlakyTest
     fun testPassiveFragmentAddRemove() {
-        val wrapper = spyk(UsabillaTracker(instanceName,
+        val mockRemoteCommandContext: RemoteCommandContext = mockk()
+        every { mockRemoteCommandContext.track(any(), any()) } just Runs
+
+        val wrapper = spyk(
+            UsabillaInstance(
                 qaActivity.activity.applicationContext,
                 null,
-                null), recordPrivateCalls = true)
+                null,
+                mockRemoteCommandContext
+            ), recordPrivateCalls = true
+        )
 
         wrapper.onActivityStarted(qaActivity.activity)
         wrapper.addPassiveFeedbackFragment(Fragment(), R.id.frame_fragment)
 
         Thread.sleep(200) // fragmentManager commit() is asynchronous
-        Assert.assertNotNull(qaActivity.activity.supportFragmentManager.findFragmentByTag(UsabillaConstants.FRAGMENT_TAG_NAME))
+        Assert.assertNotNull(
+            qaActivity.activity.supportFragmentManager.findFragmentByTag(
+                UsabillaConstants.FRAGMENT_TAG_NAME
+            )
+        )
 
         wrapper.removePassiveFeedbackFragment()
         Thread.sleep(200)
-        Assert.assertNull(qaActivity.activity.supportFragmentManager.findFragmentByTag(UsabillaConstants.FRAGMENT_TAG_NAME))
+        Assert.assertNull(
+            qaActivity.activity.supportFragmentManager.findFragmentByTag(
+                UsabillaConstants.FRAGMENT_TAG_NAME
+            )
+        )
 
         val callback = wrapper.getDefaultFormCallback(R.id.frame_fragment)
         val formClient = mockk<FormClient>(relaxed = true)
@@ -332,8 +361,11 @@ class AndroidUsabillaRemoteCommandTests {
 
         verify {
             wrapper.addPassiveFeedbackFragment(fragment, R.id.frame_fragment)
-            wrapper["track"](UsabillaConstants.Events.USABILLA_FORM_LOADED, any<Map<String, Any>>())
-            wrapper["track"](UsabillaConstants.Events.USABILLA_FORM_LOAD_ERROR, any<Map<String, Any>>())
+            wrapper["track"](Events.USABILLA_FORM_LOADED, any<Map<String, Any>>())
+            wrapper["track"](
+                Events.USABILLA_FORM_LOAD_ERROR,
+                any<Map<String, Any>>()
+            )
         }
     }
 }
