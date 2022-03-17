@@ -109,7 +109,9 @@ internal class UsabillaInstance(
 
                 val result =
                     intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT)
-                trackFeedbackResult(Events.USABILLA_FORM_CLOSED, result)
+                result?.let {
+                    trackFeedbackResult(Events.USABILLA_FORM_CLOSED, it)
+                }
             }
         }
     }
@@ -119,7 +121,9 @@ internal class UsabillaInstance(
             override fun onReceive(context: Context, intent: Intent) {
                 val result =
                     intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT_CAMPAIGN)
-                trackFeedbackResult(Events.USABILLA_FORM_CLOSED, result)
+                result?.let {
+                    trackFeedbackResult(Events.USABILLA_FORM_CLOSED, it)
+                }
             }
         }
     }
@@ -245,7 +249,7 @@ internal class UsabillaInstance(
 
     override fun onActivityStopped(activity: Activity) {}
 
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle?) {}
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
 
     override fun onActivityDestroyed(activity: Activity) {}
 
