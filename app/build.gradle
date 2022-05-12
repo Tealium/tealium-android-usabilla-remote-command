@@ -29,7 +29,7 @@ dependencies {
     implementation "com.tealium:kotlin-remotecommand-dispatcher:1.0.0"
     implementation "com.tealium:kotlin-tagmanagement-dispatcher:1.0.0"
     implementation "com.tealium:kotlin-lifecycle:1.0.0"
-    releaseImplementation "com.tealium.remotecommands:appsflyer:$tealium_usabilla_version"
+    releaseImplementation "com.tealium.remotecommands:usabilla:$tealium_usabilla_version"
     debugImplementation project (path: ':usabilla')
 
     implementation 'com.usabilla.sdk:ubform:7.0.7'

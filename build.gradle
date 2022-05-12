@@ -23,7 +23,7 @@ allprojects {
         jcenter()
 
         maven {
-            url "http://maven.tealiumiq.com/android/releases/"
+            url "https://maven.tealiumiq.com/android/releases/"
         }
     }
 

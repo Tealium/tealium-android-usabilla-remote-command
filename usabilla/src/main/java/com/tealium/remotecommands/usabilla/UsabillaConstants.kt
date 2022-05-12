@@ -1,5 +1,7 @@
 @file:JvmName("UsabillaConstants")
 
+package com.tealium.remotecommands.usabilla
+
 object UsabillaConstants {
 
     const val TAG = "Tealium-Usabilla"
