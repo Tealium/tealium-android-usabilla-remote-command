@@ -74,6 +74,7 @@ afterEvaluate {
     publishing {
         publications {
             mavenJava(MavenPublication) {
+                from components.release
                 groupId 'com.tealium.remotecommands'
                 artifactId 'usabilla'
                 version tealium_usabilla_version
