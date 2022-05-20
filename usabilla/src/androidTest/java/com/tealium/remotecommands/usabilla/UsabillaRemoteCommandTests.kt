@@ -1,30 +1,20 @@
 package com.tealium.remotecommands.usabilla
 
+import android.app.Application
 import android.content.Intent
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.filters.FlakyTest
-import androidx.test.runner.AndroidJUnit4
-import androidx.test.rule.ActivityTestRule
+import androidx.test.core.app.ApplicationProvider
 import com.tealium.remotecommands.RemoteCommand
-import com.tealium.remotecommands.RemoteCommandContext
 import com.usabilla.sdk.ubform.UbConstants
 import com.usabilla.sdk.ubform.UsabillaFormCallback
 import com.usabilla.sdk.ubform.UsabillaReadyCallback
-import com.usabilla.sdk.ubform.sdk.form.FormClient
 import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import org.junit.*
-import org.junit.runner.RunWith
 import java.lang.Exception
 
-@RunWith(AndroidJUnit4::class)
 class AndroidUsabillaRemoteCommandTests {
 
     private val passiveIntent: Intent = Intent(UbConstants.INTENT_CLOSE_FORM)
@@ -33,15 +23,13 @@ class AndroidUsabillaRemoteCommandTests {
     private lateinit var usabillaRemoteCommand: UsabillaRemoteCommand
     private lateinit var usabillaInstance: UsabillaInstance
 
-    @Rule
-    @JvmField
-    var qaActivity = ActivityTestRule<QAFragmentActivity>(QAFragmentActivity::class.java)
+    private val app: Application = ApplicationProvider.getApplicationContext()
 
     @Before
     fun setUp() {
         usabillaRemoteCommand = spyk(
             UsabillaRemoteCommand(
-                qaActivity.activity.application,
+                app,
                 usabillaHttpClient = null,
                 usabillaReadyCallback = null,
                 autoFragmentManager = false,
@@ -67,7 +55,7 @@ class AndroidUsabillaRemoteCommandTests {
 
         usabillaRemoteCommand = spyk(
             UsabillaRemoteCommand(
-                qaActivity.activity.application,
+                app,
                 usabillaHttpClient = null,
                 usabillaReadyCallback = callback,
                 autoFragmentManager = false,
@@ -281,7 +269,7 @@ class AndroidUsabillaRemoteCommandTests {
         usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
         val broadcastManager =
-            LocalBroadcastManager.getInstance(qaActivity.activity.applicationContext)
+            LocalBroadcastManager.getInstance(app)
         usabillaRemoteCommand.unregisterBroadcastReceivers()
         broadcastManager.sendBroadcastSync(passiveIntent)
         broadcastManager.sendBroadcastSync(campaignIntent)
@@ -301,71 +289,40 @@ class AndroidUsabillaRemoteCommandTests {
         }
     }
 
+    @Throws(JSONException::class)
     @Test
-    fun testLifecycleRegistration() {
-        // Lifecycle registration disabled in tests by default.
-        Assert.assertNull((usabillaRemoteCommand.usabillaInstance as UsabillaInstance).fragmentManager)
-        usabillaRemoteCommand.registerLifecycleCallbacks()
+    fun testOnInvokeRoutingSetDataMasking() {
+        usabillaRemoteCommand.usabillaInstance = usabillaInstance
 
-        // Non Fragment activity launched;
-        Espresso.onView(withId(R.id.btn_next_activity)).perform(ViewActions.click())
-        Assert.assertNull((usabillaRemoteCommand.usabillaInstance as UsabillaInstance).fragmentManager)
+        val payload = JSONObject()
+        // No data mask params provided, no method should be called
+        payload.put(Keys.COMMAND_NAME, Commands.SET_DATA_MASKING)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
-        // Fragment activity should now be back in focus
-        Espresso.pressBack()
-        Assert.assertEquals(
-            (usabillaRemoteCommand.usabillaInstance as UsabillaInstance).fragmentManager,
-            qaActivity.activity.supportFragmentManager
-        )
-    }
+        val maskList = JSONArray().apply {
+            put("key1")
+            put("key2")
+        }
+        // No mask char param provided, no method should be called
+        payload.put(Keys.MASK_LIST, maskList)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
-    @Test
-    @FlakyTest
-    fun testPassiveFragmentAddRemove() {
-        val mockRemoteCommandContext: RemoteCommandContext = mockk()
-        every { mockRemoteCommandContext.track(any(), any()) } just Runs
+        // Mask Char provided
+        payload.put(Keys.MASK_CHAR, "*")
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
+        payload.put(Keys.MASK_CHAR, "%*")
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
+        payload.put(Keys.MASK_CHAR, "% ")
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
-        val wrapper = spyk(
-            UsabillaInstance(
-                qaActivity.activity.applicationContext,
-                null,
-                null,
-                mockRemoteCommandContext
-            ), recordPrivateCalls = true
-        )
+        // Mask Char provided, but no mask list; no method called
+        payload.remove(Keys.MASK_LIST)
+        usabillaRemoteCommand.onInvoke(RemoteCommand.Response(null, "", "", payload))
 
-        wrapper.onActivityStarted(qaActivity.activity)
-        wrapper.addPassiveFeedbackFragment(Fragment(), R.id.frame_fragment)
-
-        Thread.sleep(200) // fragmentManager commit() is asynchronous
-        Assert.assertNotNull(
-            qaActivity.activity.supportFragmentManager.findFragmentByTag(
-                UsabillaConstants.FRAGMENT_TAG_NAME
-            )
-        )
-
-        wrapper.removePassiveFeedbackFragment()
-        Thread.sleep(200)
-        Assert.assertNull(
-            qaActivity.activity.supportFragmentManager.findFragmentByTag(
-                UsabillaConstants.FRAGMENT_TAG_NAME
-            )
-        )
-
-        val callback = wrapper.getDefaultFormCallback(R.id.frame_fragment)
-        val formClient = mockk<FormClient>(relaxed = true)
-        val fragment = DialogFragment()
-        every { formClient.fragment } returns fragment
-        callback.formLoadSuccess(formClient)
-        callback.formLoadFail()
-
-        verify {
-            wrapper.addPassiveFeedbackFragment(fragment, R.id.frame_fragment)
-            wrapper["track"](Events.USABILLA_FORM_LOADED, any<Map<String, Any>>())
-            wrapper["track"](
-                Events.USABILLA_FORM_LOAD_ERROR,
-                any<Map<String, Any>>()
-            )
+        verifySequence {
+            usabillaInstance.setDataMasking(maskList, '*')
+            usabillaInstance.setDataMasking(maskList, '%')
+            usabillaInstance.setDataMasking(maskList, '%')
         }
     }
 }

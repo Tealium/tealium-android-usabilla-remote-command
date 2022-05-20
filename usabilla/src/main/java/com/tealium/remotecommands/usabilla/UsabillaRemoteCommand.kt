@@ -28,13 +28,14 @@ import java.util.*
  */
 class UsabillaRemoteCommand @JvmOverloads constructor(
     private val application: Application,
-    private val usabillaHttpClient: UsabillaHttpClient? = null,
-    private val usabillaReadyCallback: UsabillaReadyCallback? = null,
+    usabillaHttpClient: UsabillaHttpClient? = null,
+    usabillaReadyCallback: UsabillaReadyCallback? = null,
     autoFragmentManager: Boolean = true,
     autoFeedbackHandler: Boolean = true,
     commandId: String = DEFAULT_COMMAND_ID,
     description: String = DEFAULT_COMMAND_DESC
-) : RemoteCommand(commandId, description), UsabillaReadyCallback {
+) : RemoteCommand(commandId, description, BuildConfig.TEALIUM_USABILLA_VERSION),
+    UsabillaReadyCallback {
 
     private var _usabillaFormCallback: UsabillaFormCallback? = null
     internal var usabillaInstance: UsabillaCommand = UsabillaInstance(
@@ -69,7 +70,7 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
     internal fun splitCommands(payload: JSONObject): Array<String> {
         val commandString = payload.optString(Keys.COMMAND_NAME, "")
         return commandString.split(UsabillaConstants.SEPARATOR).map {
-            it.trim().toLowerCase(Locale.ROOT)
+            it.trim().lowercase(Locale.ROOT)
         }.toTypedArray()
     }
 
@@ -82,7 +83,7 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
                             payload.optString(Keys.APP_ID, null)
                         )
                     }
-                    Commands.DEBUG_ENABLED ->
+                    Commands.DEBUG_ENABLED -> {
                         // default to false
                         usabillaInstance.setDebugEnabled(
                             payload.optBoolean(
@@ -90,6 +91,7 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
                                 false
                             )
                         )
+                    }
                     Commands.DISPLAY_CAMPAIGN -> {
                         // not relevant to Android.
                     }
@@ -97,10 +99,10 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
                         usabillaInstance.dismiss()
                     }
                     Commands.LOAD_FEEDBACK_FORM -> {
-                        val formId = payload.optString(Keys.FORM_ID, null)
-                        formId?.let {
+                        val formId = payload.optString(Keys.FORM_ID, "")
+                        if (formId.isNotBlank()) {
                             usabillaInstance.loadFeedbackForm(
-                                it,
+                                formId,
                                 _usabillaFormCallback,
                                 payload.optInt(Keys.FRAGMENT_ID, -1)
                             )
@@ -125,6 +127,13 @@ class UsabillaRemoteCommand @JvmOverloads constructor(
                         val customVars = payload.optJSONObject(Keys.CUSTOM)
                         customVars?.let {
                             usabillaInstance.setCustomVariables(it)
+                        }
+                    }
+                    Commands.SET_DATA_MASKING -> {
+                        val maskList = payload.optJSONArray(Keys.MASK_LIST)
+                        val maskChar = payload.optString(Keys.MASK_CHAR, "")
+                        if (maskList != null && maskChar.isNotEmpty()) {
+                            usabillaInstance.setDataMasking(maskList, maskChar.first())
                         }
                     }
                 }

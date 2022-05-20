@@ -41,7 +41,7 @@ object TealiumHelper {
             Environment.DEV,
             modules = mutableSetOf(Modules.Lifecycle),
             dispatchers = mutableSetOf(
-                Dispatchers.TagManagement,
+//                Dispatchers.TagManagement,
                 Dispatchers.RemoteCommands
             )
         ).apply {

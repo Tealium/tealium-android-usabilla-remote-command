@@ -17,9 +17,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CampaignActivity"></activity>
-        <activity android:name=".PassiveFeedbackActivity"></activity>
-        <activity android:name=".EventsActivity"></activity>
+        <activity android:name=".CampaignActivity" android:exported="false"></activity>
+        <activity android:name=".PassiveFeedbackActivity" android:exported="false"></activity>
+        <activity android:name=".EventsActivity" android:exported="false"></activity>
     </application>
 
 </manifest>

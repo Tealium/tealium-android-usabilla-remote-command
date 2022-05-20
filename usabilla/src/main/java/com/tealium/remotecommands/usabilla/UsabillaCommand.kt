@@ -26,6 +26,7 @@ internal interface UsabillaCommand : Application.ActivityLifecycleCallbacks, Usa
     fun removeCachedForms()
     fun reset()
     fun dismiss()
+    fun setDataMasking(maskList: JSONArray, maskChar: Char)
 
     // Feedback Receivers
     val campaignFeedbackReceiver: BroadcastReceiver

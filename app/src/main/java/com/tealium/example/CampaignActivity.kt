@@ -15,7 +15,7 @@ class CampaignActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_usabilla_campaign_event).setOnClickListener {
             val campaignEvent =
                 findViewById<EditText>(R.id.edit_usabilla_campaign_event).text.toString()
-            TealiumHelper.trackEvent(campaignEvent, mutableMapOf<String, Any>())
+            TealiumHelper.trackEvent("button_click", mutableMapOf<String, Any>("event_name" to campaignEvent))
         }
 
         findViewById<Button>(R.id.btn_usabilla_campaign_reset).setOnClickListener {

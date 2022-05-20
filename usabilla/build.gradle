@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
 
     compileOptions {
         sourceCompatibility "1.8"
@@ -12,11 +12,13 @@ android {
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField 'String', 'TEALIUM_USABILLA_VERSION', "\"$tealium_usabilla_version\""
     }
 
     buildTypes {
@@ -52,20 +54,20 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.tealium:remotecommands:1.0.0'
-    implementation 'com.usabilla.sdk:ubform:7.5.0'
+    api 'com.tealium:remotecommands:1.0.1'
+    api 'com.usabilla.sdk:ubform:7.5.0'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
 
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:rules:1.2.0'
-    androidTestImplementation 'androidx.test:runner:1.2.0'
-    androidTestImplementation 'androidx.test:core:1.2.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:core:1.4.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
-    def mockk_version = "1.9.2"
+    def mockk_version = "1.12.0"
     testImplementation "io.mockk:mockk:$mockk_version"
     androidTestImplementation "io.mockk:mockk-android:$mockk_version"
 }
@@ -87,6 +89,7 @@ afterEvaluate {
 //                credentials(AwsCredentials) {
 //                    accessKey AWS_ACCESS_KEY
 //                    secretKey AWS_SECRET_KEY
+//                    sessionToken AWS_SESSION_TOKEN
 //                }
 //            }
 //        }

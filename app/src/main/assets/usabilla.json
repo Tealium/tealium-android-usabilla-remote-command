@@ -9,6 +9,7 @@
     "dismiss_automatically": "dismissAutomatically",
     "form_id": "formId",
     "form_ids": "formIds",
+    "fragment_id": "fragmentId",
     "customer_first_name": "custom.customer_first_name"
   },
   "commands": {
