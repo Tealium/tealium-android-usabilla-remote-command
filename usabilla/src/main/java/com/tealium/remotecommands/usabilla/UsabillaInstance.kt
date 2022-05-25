@@ -42,7 +42,7 @@ internal class UsabillaInstance(
 
     override fun sendEvent(event: String?) {
         event?.let {
-            if (it != "") {
+            if (it.isNotBlank()) {
                 Usabilla.sendEvent(applicationContext, it)
             }
         }
@@ -101,6 +101,18 @@ internal class UsabillaInstance(
         Usabilla.dismiss(applicationContext)
     }
 
+    override fun setDataMasking(maskList: JSONArray, maskChar: Char) {
+        val list = mutableListOf<String>()
+        for (i in 0 until maskList.length()) {
+            try {
+                maskList.getString(i)?.let {
+                    list.add(it)
+                }
+            } catch (ignored: Exception) { }
+        }
+        Usabilla.setDataMasking(list, maskChar)
+    }
+
     override val passiveFeedbackReceiver: BroadcastReceiver by lazy {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -109,7 +121,9 @@ internal class UsabillaInstance(
 
                 val result =
                     intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT)
-                trackFeedbackResult(Events.USABILLA_FORM_CLOSED, result)
+                result?.let {
+                    trackFeedbackResult(Events.USABILLA_FORM_CLOSED, it)
+                }
             }
         }
     }
@@ -119,7 +133,9 @@ internal class UsabillaInstance(
             override fun onReceive(context: Context, intent: Intent) {
                 val result =
                     intent.getParcelableExtra<FeedbackResult>(FeedbackResult.INTENT_FEEDBACK_RESULT_CAMPAIGN)
-                trackFeedbackResult(Events.USABILLA_FORM_CLOSED, result)
+                result?.let {
+                    trackFeedbackResult(Events.USABILLA_FORM_CLOSED, it)
+                }
             }
         }
     }
@@ -137,7 +153,6 @@ internal class UsabillaInstance(
                     .replace(fragmentId, frag, UsabillaConstants.FRAGMENT_TAG_NAME)
                     .commit()
             }
-
         }
     }
 
@@ -165,8 +180,8 @@ internal class UsabillaInstance(
     fun getDefaultFormCallback(fragmentId: Int): UsabillaFormCallback {
         return object : UsabillaFormCallback {
 
-            override fun formLoadSuccess(formClient: FormClient) {
-                addPassiveFeedbackFragment(formClient.fragment, fragmentId)
+            override fun formLoadSuccess(form: FormClient) {
+                addPassiveFeedbackFragment(form.fragment, fragmentId)
                 track(Events.USABILLA_FORM_LOADED, null)
             }
 
@@ -174,7 +189,7 @@ internal class UsabillaInstance(
                 track(Events.USABILLA_FORM_LOAD_ERROR, null)
             }
 
-            override fun mainButtonTextUpdated(s: String) {
+            override fun mainButtonTextUpdated(text: String) {
 
             }
         }
@@ -203,7 +218,7 @@ internal class UsabillaInstance(
      * @param data
      */
     private fun track(eventName: String, data: Map<String, Any>?) {
-        remoteCommandContext?.track(eventName, data)
+        remoteCommandContext?.track(eventName, data ?: mapOf<String, Any>())
     }
 
     fun setContext(context: RemoteCommandContext) {
@@ -245,7 +260,7 @@ internal class UsabillaInstance(
 
     override fun onActivityStopped(activity: Activity) {}
 
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle?) {}
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
 
     override fun onActivityDestroyed(activity: Activity) {}
 
@@ -259,8 +274,5 @@ internal class UsabillaInstance(
             (currentActivity as FragmentActivity).supportFragmentManager
         else
             null
-
-    private fun isNullOrEmpty(string: String?): Boolean {
-        return string == null || string.isEmpty()
-    }
+        private set
 }

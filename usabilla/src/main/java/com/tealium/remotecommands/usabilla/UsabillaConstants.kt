@@ -21,6 +21,7 @@ object Commands {
     const val DISMISS_AUTOMATICALLY = "dismissautomatically"
     const val SET_CUSTOM_VARIABLES = "setcustomvariables"
     const val RESET = "resetcampaigndata"
+    const val SET_DATA_MASKING = "setdatamasking"
 }
 
 object Keys {
@@ -34,6 +35,8 @@ object Keys {
     const val FORM_IDS = "formIds"
     const val CUSTOM = "custom"
     const val FRAGMENT_ID = "fragmentId"
+    const val MASK_LIST = "mask_list"
+    const val MASK_CHAR = "mask_char"
 
     const val USABILLA_RATING = "usabilla_rating"
     const val USABILLA_ABANDONED_PAGE_INDEX = "usabilla_abandoned_page_index"
